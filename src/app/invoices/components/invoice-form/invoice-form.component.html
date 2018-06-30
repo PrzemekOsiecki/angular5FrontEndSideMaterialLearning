@@ -2,18 +2,20 @@
 
   {{this.invoiceForm.value | json}}
   <h3>Create Invoice</h3>
-  
+
     <form class="form-container" [formGroup] = "invoiceForm" (ngSubmit) = "onSubmit()" novalidate>
 
         <mat-form-field color = "green">
           <input matInput placeholder="Item" 
           formControlName = "item">
+          <mat-error *ngIf = "invoiceForm.controls.item.invalid && invoiceForm.controls.item.touched">Item is required</mat-error>
         </mat-form-field>
 
         <mat-form-field color = "green">
           <input matInput [matDatepicker]="date" 
           placeholder="Choose a date" 
           formControlName="date">
+          <mat-error *ngIf = "invoiceForm.controls.date.invalid && invoiceForm.controls.date.touched">date is required</mat-error>
           <mat-datepicker-toggle matSuffix [for]="date"></mat-datepicker-toggle>
           <mat-datepicker #date></mat-datepicker>
         </mat-form-field>
@@ -22,6 +24,7 @@
             <input matInput [matDatepicker]="due" 
             placeholder="Choose a date"
             formControlName = "due">
+            <mat-error *ngIf = "invoiceForm.controls.due.invalid && invoiceForm.controls.due.touched">due is required</mat-error>
             <mat-datepicker-toggle matSuffix [for]="due"></mat-datepicker-toggle>
             <mat-datepicker #due></mat-datepicker>
           </mat-form-field>
@@ -30,6 +33,7 @@
             <input matInput placeholder="Qty" 
             type="number"
             formControlName = "qty">
+            <mat-error *ngIf = "invoiceForm.controls.qty.invalid && invoiceForm.controls.qty.touched">qty is required</mat-error>
         </mat-form-field>
 
         <mat-form-field color = "green">
@@ -45,7 +49,7 @@
         </mat-form-field>
 
         <div>
-            <button mat-raised-button type="submit" color="accent">Save</button>
+            <button mat-raised-button [disabled] = "!invoiceForm.valid" type="submit" color="accent">Save</button>
             <button mat-raised-button type="reset">Cancel</button>
           </div>
       </form>        

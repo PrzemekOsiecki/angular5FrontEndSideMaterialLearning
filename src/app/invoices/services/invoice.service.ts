@@ -17,4 +17,8 @@ export class InvoiceService {
   createInvoice(_body: Invoice): Observable<Invoice> {
     return this._httpClient.post<Invoice>(`${BASE_URL}/invoices`, _body)
   }
+
+  deleteInvoice(id:string): Observable<Invoice> {
+    return this._httpClient.delete<Invoice>(`${BASE_URL}/invoices/${id}`)
+  }
 }
