@@ -1,0 +1,53 @@
+<mat-card>
+
+  {{this.invoiceForm.value | json}}
+  <h3>Create Invoice</h3>
+  
+    <form class="form-container" [formGroup] = "invoiceForm" (ngSubmit) = "onSubmit()" novalidate>
+
+        <mat-form-field color = "green">
+          <input matInput placeholder="Item" 
+          formControlName = "item">
+        </mat-form-field>
+
+        <mat-form-field color = "green">
+          <input matInput [matDatepicker]="date" 
+          placeholder="Choose a date" 
+          formControlName="date">
+          <mat-datepicker-toggle matSuffix [for]="date"></mat-datepicker-toggle>
+          <mat-datepicker #date></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field color = "green">
+            <input matInput [matDatepicker]="due" 
+            placeholder="Choose a date"
+            formControlName = "due">
+            <mat-datepicker-toggle matSuffix [for]="due"></mat-datepicker-toggle>
+            <mat-datepicker #due></mat-datepicker>
+          </mat-form-field>
+        
+        <mat-form-field color = "green">
+            <input matInput placeholder="Qty" 
+            type="number"
+            formControlName = "qty">
+        </mat-form-field>
+
+        <mat-form-field color = "green">
+            <input matInput placeholder="Tax" 
+            type="number" 
+            formControlName = "tax">
+        </mat-form-field>
+
+        <mat-form-field color = "green">
+            <input matInput placeholder="Rate" 
+            type="number"
+            formControlName = "rate">
+        </mat-form-field>
+
+        <div>
+            <button mat-raised-button type="submit" color="accent">Save</button>
+            <button mat-raised-button type="reset">Cancel</button>
+          </div>
+      </form>        
+
+</mat-card>

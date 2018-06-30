@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { DashboardComponent } from './dashboard.component';
-import { MainContentComponent } from './components/main-content/main-content.component';
 import { InvoiceListeningComponent } from '../invoices/invoice-listening/invoice-listening.component';
 import { ClientListeningComponent } from '../clients/components/client-listening/client-listening.component';
+import { InvoiceFormComponent } from '../invoices/components/invoice-form/invoice-form.component';
 
 const routes: Routes = [
   {
@@ -11,16 +11,20 @@ const routes: Routes = [
     component: DashboardComponent,
     children: [
       {
-        path : '',
-        component: MainContentComponent
-      },
-      {
         path: 'invoices',
         component: InvoiceListeningComponent
       },
       {
+        path: 'invoices/new',
+        component: InvoiceFormComponent
+      },
+      {
         path: 'clients',
         component: ClientListeningComponent
+      },
+      {
+        path: '**',
+        redirectTo: 'invoices'
       }
     ]
   }
