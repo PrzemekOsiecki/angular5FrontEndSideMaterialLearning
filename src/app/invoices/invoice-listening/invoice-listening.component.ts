@@ -47,6 +47,10 @@ export class InvoiceListeningComponent implements OnInit {
       }, err => this.errorHandler(err, 'Deleteing invoice Failed!'));
   }
 
+  editBtnHandler(id) {
+    this._router.navigate(['dashboard', 'invoices', id]);
+  }
+
   private errorHandler(error, message) {
     console.log(error);
     this._snackBar.open(message, 'Error', {

@@ -23,6 +23,10 @@ const routes: Routes = [
         component: ClientListeningComponent
       },
       {
+        path: 'invoices/:id',
+        component: InvoiceFormComponent
+      },
+      {
         path: '**',
         redirectTo: 'invoices'
       }
