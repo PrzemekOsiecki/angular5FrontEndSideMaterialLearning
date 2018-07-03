@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { InvoiceService } from '../services/invoice.service';
 import { Invoice } from '../models/invoice';
 import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar, MatPaginator } from '@angular/material';
 import { remove } from 'lodash';
+import { Subscriber } from 'rxjs/Subscriber';
+import 'rxjs/Rx';
 
 @Component({
   selector: 'app-invoice-listening',
@@ -14,6 +16,9 @@ export class InvoiceListeningComponent implements OnInit {
 
   displayedColumns: string[] = ['item', 'date', 'due', 'qty', 'rate', 'tax', 'action'];
   dataSource: Invoice[] = [];
+  resultsLength = 0;
+
+  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   constructor(private _invoiceService: InvoiceService,
               private _router: Router,
@@ -21,14 +26,16 @@ export class InvoiceListeningComponent implements OnInit {
   }
 
   ngOnInit() {
-    this._invoiceService
-      .getInvoices()
+    this.paginator.page
+      .flatMap(data => {
+        return this._invoiceService.getInvoices({page: ++data.pageIndex, perPage: data.pageSize})
+      })
       .subscribe(data => {
-        this.dataSource = data;
-        console.log(data);
-      }, err => {
-        console.log(err);
-      });
+        this.dataSource = data.docs;
+        this.resultsLength = data.total;
+      }, err => this.errorHandler(err, 'Failed to fetch invoice'));
+   
+      this.populateInvoices();
   }
 
   saveBtnHandler() {
@@ -49,6 +56,17 @@ export class InvoiceListeningComponent implements OnInit {
 
   editBtnHandler(id) {
     this._router.navigate(['dashboard', 'invoices', id]);
+  }
+
+  private populateInvoices() {
+    this._invoiceService.getInvoices({page: 1, perPage: 10})
+    .subscribe(data => {
+      this.dataSource = data.docs;
+      this.resultsLength = data.total;
+      console.log(data);
+    }, err => {
+      console.log(err);
+    });
   }
 
   private errorHandler(error, message) {
