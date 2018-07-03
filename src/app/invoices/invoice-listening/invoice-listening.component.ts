@@ -17,6 +17,7 @@ export class InvoiceListeningComponent implements OnInit {
   displayedColumns: string[] = ['item', 'date', 'due', 'qty', 'rate', 'tax', 'action'];
   dataSource: Invoice[] = [];
   resultsLength = 0;
+  isResultLoading = false;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
@@ -26,13 +27,16 @@ export class InvoiceListeningComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.paginator.page
+    this.isResultLoading = true;
+    this.paginator
+      .page
       .flatMap(data => {
         return this._invoiceService.getInvoices({page: ++data.pageIndex, perPage: data.pageSize})
       })
       .subscribe(data => {
         this.dataSource = data.docs;
         this.resultsLength = data.total;
+        this.isResultLoading = false;
       }, err => this.errorHandler(err, 'Failed to fetch invoice'));
    
       this.populateInvoices();
@@ -59,6 +63,7 @@ export class InvoiceListeningComponent implements OnInit {
   }
 
   private populateInvoices() {
+    this.isResultLoading = true;
     this._invoiceService.getInvoices({page: 1, perPage: 10})
     .subscribe(data => {
       this.dataSource = data.docs;
@@ -66,10 +71,13 @@ export class InvoiceListeningComponent implements OnInit {
       console.log(data);
     }, err => {
       console.log(err);
+    }, () => {
+      this.isResultLoading = false;
     });
   }
 
   private errorHandler(error, message) {
+    this.isResultLoading = false;
     console.log(error);
     this._snackBar.open(message, 'Error', {
       duration: 2000
