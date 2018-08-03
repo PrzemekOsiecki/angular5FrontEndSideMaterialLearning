@@ -1,45 +1,92 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { InvoiceService } from '../services/invoice.service';
 import { Invoice } from '../models/invoice';
 import { Router } from '@angular/router';
-import { MatSnackBar, MatPaginator } from '@angular/material';
+import { MatSnackBar, MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
 import { remove } from 'lodash';
 import { Subscriber } from 'rxjs/Subscriber';
 import 'rxjs/Rx';
+import { of as observableOf } from 'rxjs/observable/of';
+import { merge } from 'rxjs/observable/merge';
+import { map } from 'rxjs/operators/map';
+import { startWith } from 'rxjs/operators/startWith';
+import { switchMap } from 'rxjs/operators/switchMap';
+import { catchError } from 'rxjs/operators/catchError';
 
 @Component({
   selector: 'app-invoice-listening',
   templateUrl: './invoice-listening.component.html',
   styleUrls: ['./invoice-listening.component.scss']
 })
-export class InvoiceListeningComponent implements OnInit {
+export class InvoiceListeningComponent implements OnInit, AfterViewInit {
 
   displayedColumns: string[] = ['item', 'date', 'due', 'qty', 'rate', 'tax', 'action'];
-  dataSource: Invoice[] = [];
+  dataSource = new MatTableDataSource<Invoice>();
   resultsLength = 0;
   isResultLoading = false;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
+  @ViewChild(MatSort) sort: MatSort;
+
   constructor(private _invoiceService: InvoiceService,
               private _router: Router,
-              private _snackBar: MatSnackBar ) {     
+              private _snackBar: MatSnackBar,
+              private ref: ChangeDetectorRef ) {     
   }
 
   ngOnInit() {
+   // this.isResultLoading = true;
+    this.ref.detectChanges();
+  }
+
+  ngAfterViewInit() {
+    
+      merge(this.paginator.page, this.sort.sortChange)
+        .pipe(
+          startWith({}),
+          switchMap(() => {
+            this.isResultLoading = true;
+            return this._invoiceService.getInvoices({
+                page: this.paginator.pageIndex, 
+                perPage: this.paginator.pageSize, 
+                sortField: this.sort.active,
+                sortDirection: this.sort.direction,
+                filter: ''
+                })
+          }),
+          map(data => {
+            this.isResultLoading = false;
+            this.resultsLength = data.total;
+            return data.docs;
+          }),
+          catchError(() => {
+            this.isResultLoading = false;
+            this.errorHandler('Failed to fetch invocies', 'Error');
+            return observableOf([]);
+          })
+        )
+        .subscribe(data => {
+          this.dataSource.data = data;
+        });
+  }
+
+  filterText(filterValue: string) {
     this.isResultLoading = true;
-    this.paginator
-      .page
-      .flatMap(data => {
-        return this._invoiceService.getInvoices({page: ++data.pageIndex, perPage: data.pageSize})
-      })
-      .subscribe(data => {
-        this.dataSource = data.docs;
-        this.resultsLength = data.total;
-        this.isResultLoading = false;
-      }, err => this.errorHandler(err, 'Failed to fetch invoice'));
-   
-      this.populateInvoices();
+    filterValue = filterValue.trim();
+    this.paginator.pageIndex = 0;
+    this._invoiceService.getInvoices({
+      page: this.paginator.pageIndex,
+      perPage: this.paginator.pageSize,
+      sortField: this.sort.active,
+      sortDirection: this.sort.direction,
+      filter: filterValue
+    })
+    .subscribe(data => {
+      this.dataSource.data = data.docs;
+      this.resultsLength = data.total;
+      this.isResultLoading = false;
+    }, err => this.errorHandler('Filter Invocies Failed', 'Error'));
   }
 
   saveBtnHandler() {
@@ -49,10 +96,10 @@ export class InvoiceListeningComponent implements OnInit {
   deleteBtnHandler(id) {
     this._invoiceService.deleteInvoice(id)
       .subscribe(data => {
-        const removedItems = remove(this.dataSource, (item) => {
+        const removedItems = remove(this.dataSource.data, (item) => {
           return item._id === data._id;
         });
-        this.dataSource = [...this.dataSource]; //update datasource
+        this.dataSource.data = [...this.dataSource.data]; //update datasource
         this._snackBar.open('Invoice deleted', 'Success');
         console.log(data);
       }, err => this.errorHandler(err, 'Deleteing invoice Failed!'));
@@ -60,20 +107,6 @@ export class InvoiceListeningComponent implements OnInit {
 
   editBtnHandler(id) {
     this._router.navigate(['dashboard', 'invoices', id]);
-  }
-
-  private populateInvoices() {
-    this.isResultLoading = true;
-    this._invoiceService.getInvoices({page: 1, perPage: 10})
-    .subscribe(data => {
-      this.dataSource = data.docs;
-      this.resultsLength = data.total;
-      console.log(data);
-    }, err => {
-      console.log(err);
-    }, () => {
-      this.isResultLoading = false;
-    });
   }
 
   private errorHandler(error, message) {

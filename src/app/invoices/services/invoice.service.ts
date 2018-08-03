@@ -10,8 +10,16 @@ export class InvoiceService {
 
   constructor(private _httpClient: HttpClient) { }
 
-  getInvoices({page, perPage}): Observable<InvoicePaginationResponse> {
-    return this._httpClient.get<InvoicePaginationResponse>(`${BASE_URL}/invoices/?page=${page}&perPage=${perPage}`);
+  getInvoices({page, perPage, sortField, sortDirection, filter}): Observable<InvoicePaginationResponse> {
+    let queryString = `${BASE_URL}/invoices/?page=${page + 1}&perPage=${perPage}`;
+    
+    if(sortField && sortDirection) {
+      queryString = `${queryString}&sortField=${sortField}&sortDirection=${sortDirection}`;
+    }
+    if(filter) {
+      queryString = `${queryString}&filter=${filter}`;
+    }
+    return this._httpClient.get<InvoicePaginationResponse>(queryString);
   }
 
   createInvoice(_body: Invoice): Observable<Invoice> {
